@@ -9,7 +9,9 @@ Persönliches Charting-Terminal als Ersatz für TradingView.
   - SQZMOM_LB – Squeeze Momentum (LazyBear)
   - CM_Ultimate_MA_MTF_V2 (ChrisMoody)
   - Bollinger Bänder mit Füllung
-- Zeichenwerkzeuge: horizontale Linie, Trendlinie
+- Zeichenwerkzeuge: horizontale Linie, Trendlinie, Fibonacci-Retracement, Rechteck, Text, Rückgängig
+- Preisalarme: Preis im Chart anklicken; Hinweis mit Ton, solange die Seite offen ist
+- Chart aktualisiert sich jede Minute
 - Firmen-Panel mit Profil, Bewertung und Fundamentaldaten
 
 ## Daten
