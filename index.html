@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{display:grid;grid-template-columns:200px minmax(0,1fr) 320px;grid-template-rows:auto minmax(0,1fr);gap:10px;height:100%;min-height:560px}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr) 320px;grid-template-rows:auto minmax(0,1fr);gap:10px;height:100%;min-height:560px}
 .bar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
 .brand{font-weight:600;letter-spacing:.02em;margin-right:6px}
 .brand span{color:var(--accent)}
@@ -68,6 +68,32 @@ button{cursor:pointer}
 .wl-hint{font-size:12px;color:var(--muted);padding:8px 12px}
 .al-h{border-top:1px solid var(--line)}
 #wl{flex:1 1 auto;min-height:80px}
+.wl-bar{display:flex;gap:6px;padding:8px 8px 6px;position:relative}
+.wl-bar select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:5px 6px;font-size:13px}
+.wl-menu{position:absolute;top:calc(100% - 2px);right:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;z-index:20;display:grid;min-width:210px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.wl-menu button{background:none;border:0;text-align:left;padding:7px 10px;border-radius:4px;font-size:13px}
+.wl-menu button:hover,.wl-menu button:focus-visible{background:var(--chip)}
+.wl-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.wl-cols,#wl button.go{display:grid;grid-template-columns:minmax(0,1fr) 66px 56px;gap:6px;align-items:baseline}
+.wl-cols{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 34px 4px 12px}
+.wl-cols span+span,.wl .px,.wl .pc{text-align:right}
+.wl .sy{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl .px,.wl .pc{font-variant-numeric:tabular-nums;font-size:12.5px}
+.wl .pc.up{color:var(--up)} .wl .pc.down{color:var(--down)}
+#wl li.sec button.go{display:block;font-family:var(--f-ui);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 12px 5px;background:var(--bg)}
+.wl li.sec{background:var(--bg)}
+dialog.dlg{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:0;width:min(520px,calc(100vw - 32px));box-shadow:0 16px 48px rgba(0,0,0,.3)}
+dialog.dlg::backdrop{background:rgba(0,0,0,.45)}
+.dlg form{display:grid;gap:10px;padding:16px}
+.dlg h3{margin:0;font-size:15px}
+.dlg p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.dlg input[type=text],.dlg textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 8px;font-family:var(--f-num);font-size:12.5px}
+.dlg textarea{min-height:150px;resize:vertical}
+.dlg .chk{display:flex;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.dlg .lst{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:4px;padding:4px 8px}
+.dlg menu{display:flex;justify-content:flex-end;gap:8px;margin:4px 0 0;padding:0}
+.dlg menu button{border:1px solid var(--line);background:none;border-radius:4px;padding:6px 14px}
+.dlg menu button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
 #alerts{flex:0 0 auto;max-height:40%}
 #alerts li{font-family:var(--f-num);font-size:12.5px}
 #alerts .go{display:flex;justify-content:space-between;gap:8px}
@@ -150,7 +176,16 @@ a{color:var(--accent)}
   </header>
 
   <aside class="side" aria-label="Watchlist">
-    <h2>Watchlist</h2>
+    <div class="wl-bar">
+      <select id="wlSel" aria-label="Watchlist wählen"></select>
+      <button class="tbtn" id="wlMenuBtn" aria-expanded="false" aria-label="Listen verwalten" title="Listen verwalten">⋯</button>
+      <div class="wl-menu" id="wlMenu" hidden>
+        <button data-a="new">Neue Liste…</button><button data-a="ren">Liste umbenennen…</button><button data-a="sec">Abschnitt hinzufügen…</button>
+        <hr><button data-a="tv">Aus TradingView importieren…</button><button data-a="ibk">IBKR-Watchlists importieren…</button><button data-a="exp">Als TradingView-Liste exportieren…</button>
+        <hr><button data-a="del">Liste löschen…</button>
+      </div>
+    </div>
+    <div class="wl-cols" aria-hidden="true"><span>Symbol</span><span>Kurs</span><span>%</span></div>
     <ul class="wl" id="wl"></ul>
       <h2 class="al-h">Alarme</h2>
     <ul class="wl" id="alerts"></ul>
@@ -172,6 +207,9 @@ a{color:var(--accent)}
       <div class="pane" id="p-stoch" hidden><div class="lbl" id="l-stoch">Stoch 14 3</div></div>
       <div class="pane" id="p-sqz" hidden><div class="lbl" id="l-sqz">SQZMOM_LB</div></div>
       <div class="pane" id="p-cmmacd" hidden><div class="lbl" id="l-cmmacd">CM_Ult_MacD_MTF</div></div>
+      <div class="pane" id="p-atr" hidden><div class="lbl" id="l-atr">ATR 14</div></div>
+      <div class="pane" id="p-adx" hidden><div class="lbl" id="l-adx">ADX / DMI 14</div></div>
+      <div class="pane" id="p-obv" hidden><div class="lbl" id="l-obv">OBV</div></div>
       <div class="msg" id="msg" hidden><p id="msgTxt"></p></div>
       <input class="txtin" id="txtin" type="text" placeholder="Text eingeben, Enter" hidden aria-label="Text für den Chart">
     </div>
@@ -182,10 +220,13 @@ a{color:var(--accent)}
   </aside>
 </div>
 
+<dialog class="dlg" id="dlg"><form method="dialog" id="dlgF"><h3 id="dlgT"></h3><div id="dlgB" style="display:grid;gap:8px"></div>
+  <menu><button value="cancel" type="submit" formnovalidate>Abbrechen</button><button value="ok" class="pri" id="dlgOk" type="submit">OK</button></menu></form></dialog>
+
 <script>
 (() => {
 const LWC = window.LightweightCharts;
-const SERVER = "Twelve Data";
+const TD = "Twelve Data", IB = "Interactive Brokers";
 const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const store = {
@@ -211,14 +252,27 @@ const IND = [
   {id:"rsi", name:"RSI 14", color:"#8a63d2", pane:"rsi"},
   {id:"macd", name:"MACD 12 26 9", color:"#2a9df4", pane:"macd"},
   {id:"stoch", name:"Stochastik 14 3", color:"#e3a21a", pane:"stoch"},
+  {id:"st", name:"SuperTrend", color:"#00c853", pane:"main"},
+  {id:"ichi", name:"Ichimoku Kinko Hyo", color:"#2962ff", pane:"main"},
+  {id:"kc", name:"Keltner-Kanal", color:"#26a69a", pane:"main"},
+  {id:"dc", name:"Donchian-Kanal", color:"#2196f3", pane:"main"},
+  {id:"atr", name:"ATR (Average True Range)", color:"#b05cd6", pane:"atr"},
+  {id:"adx", name:"ADX / DMI", color:"#ff9800", pane:"adx"},
+  {id:"obv", name:"OBV (On-Balance Volume)", color:"#2a9df4", pane:"obv"},
   {id:"bb", name:"BB (Bollinger Bänder)", color:"#2962ff", pane:"main", own:true},
   {id:"cmma", name:"CM_Ultimate_MA_MTF_V2", color:"#00e676", pane:"main", own:true},
   {id:"cmmacd", name:"CM_Ult_MacD_MTF", color:"#00e676", pane:"cmmacd", own:true},
   {id:"sqz", name:"SQZMOM_LB (Squeeze Momentum)", color:"#7cb342", pane:"sqz", own:true},
 ];
-const PANES = ["rsi","macd","stoch","cmmacd","sqz"];
+const PANES = ["rsi","macd","stoch","cmmacd","sqz","atr","adx","obv"];
 /* Settings for your own indicators; defaults = your TradingView inputs */
 const PDEF = {
+  st: [{k:"len",label:"ATR-Länge",v:10},{k:"mult",label:"Faktor",v:3}],
+  ichi: [{k:"t",label:"Tenkan",v:9},{k:"k",label:"Kijun",v:26},{k:"s",label:"Senkou B",v:52},{k:"d",label:"Verschiebung",v:26}],
+  kc: [{k:"len",label:"EMA-Länge",v:20},{k:"mult",label:"Faktor",v:2},{k:"atr",label:"ATR-Länge",v:10}],
+  dc: [{k:"len",label:"Länge",v:20}],
+  atr: [{k:"len",label:"Länge",v:14}],
+  adx: [{k:"len",label:"Länge",v:14}],
   bb: [{k:"len",label:"Länge",v:20},{k:"mult",label:"StdAbw",v:2},{k:"mid",label:"Mittellinie",type:"bool",v:false}],
   cmma: [{k:"res",label:"Zeitrahmen",type:"select",opts:[["chart","wie Chart"],["15min","15"],["30min","30"],["1h","60"],["4h","240"],["1day","T"],["1week","W"]],v:"chart"},{k:"len",label:"Länge MA 1",v:20},
          {k:"t3",label:"T3-Faktor ×0,1",v:7},{k:"type",label:"Typ MA 1",type:"select",opts:[["1","SMA"],["2","EMA"],["3","WMA"],["4","Hull"],["5","VWMA"],["6","RMA"],["7","TEMA"],["8","Tilson T3"]],v:"1"},{k:"smooth",label:"Farbglättung",v:2},
@@ -290,6 +344,25 @@ function sqzmom(h,l,c,p){
     return (lb>lk&&ub<uk) ? "on" : (lb<lk&&ub>uk) ? "off" : "none"; });
   const src=c.map((v,i)=>{ if(i<p.kcLen-1||ma[i]==null) return null; const hh=Math.max(...h.slice(i-p.kcLen+1,i+1)), ll=Math.min(...l.slice(i-p.kcLen+1,i+1)); return v-((hh+ll)/2+ma[i])/2; });
   return {val:linreg(src,p.kcLen), state}; }
+function trueRange(h,l,c){ return h.map((x,i)=>i===0?x-l[i]:Math.max(x-l[i],Math.abs(x-c[i-1]),Math.abs(l[i]-c[i-1]))); }
+function rmaN(a,n){ let p=null, cnt=0, s=0; return a.map(v=>{ if(v==null) return null; if(p==null){ s+=v; cnt++; if(cnt<n) return null; p=s/n; return p; } p=(p*(n-1)+v)/n; return p; }); }
+const atrOf=(h,l,c,n)=>rmaN(trueRange(h,l,c),n);
+function supertrend(h,l,c,n,m){ const a=atrOf(h,l,c,n); const out=[], dir=[]; let up=null, dn=null, d=1;
+  for(let i=0;i<c.length;i++){ if(a[i]==null){ out.push(null); dir.push(null); continue; } const hl=(h[i]+l[i])/2; let bu=hl-m*a[i], bd=hl+m*a[i];
+    if(up!=null&&c[i-1]>up) bu=Math.max(bu,up); if(dn!=null&&c[i-1]<dn) bd=Math.min(bd,dn);
+    if(up!=null){ if(d===-1&&c[i]>dn) d=1; else if(d===1&&c[i]<up) d=-1; }
+    up=bu; dn=bd; out.push(d===1?up:dn); dir.push(d); }
+  return {v:out,dir}; }
+const midHL=(h,l,n,i)=>{ if(i<n-1) return null; let hh=-Infinity,ll=Infinity; for(let j=i-n+1;j<=i;j++){ if(h[j]>hh) hh=h[j]; if(l[j]<ll) ll=l[j]; } return (hh+ll)/2; };
+function ichimoku(h,l,c,q){ const t=c.map((_,i)=>midHL(h,l,q.t,i)), k=c.map((_,i)=>midHL(h,l,q.k,i)), b=c.map((_,i)=>midHL(h,l,q.s,i));
+  const a=t.map((v,i)=>v==null||k[i]==null?null:(v+k[i])/2); const sh=(arr,d)=>arr.map((_,i)=>i-d>=0&&i-d<arr.length?arr[i-d]:null);
+  return {t,k,a:sh(a,q.d-1),b:sh(b,q.d-1),ch:sh(c,-(q.d-1))}; }
+function dmi(h,l,c,n){ const pd=[0],md=[0]; for(let i=1;i<c.length;i++){ const u=h[i]-h[i-1], d=l[i-1]-l[i]; pd.push(u>d&&u>0?u:0); md.push(d>u&&d>0?d:0); }
+  const tr=rmaN(trueRange(h,l,c),n), p=rmaN(pd,n), m=rmaN(md,n);
+  const pdi=p.map((v,i)=>v==null||!tr[i]?null:100*v/tr[i]), mdi=m.map((v,i)=>v==null||!tr[i]?null:100*v/tr[i]);
+  const dx=pdi.map((v,i)=>v==null||mdi[i]==null||v+mdi[i]===0?null:100*Math.abs(v-mdi[i])/(v+mdi[i]));
+  return {pdi,mdi,adx:rmaN(dx,n)}; }
+function obvOf(b){ let o=0; return b.map((x,i)=>{ if(i>0){ if(x.close>b[i-1].close) o+=x.volume||0; else if(x.close<b[i-1].close) o-=x.volume||0; } return o; }); }
 function vwap(b){ let day=null,pv=0,vv=0; return b.map(x=>{ const dkey=new Date(x.time*1000).toISOString().slice(0,10); if(dkey!==day){day=dkey;pv=0;vv=0;} const tp=(x.high+x.low+x.close)/3; pv+=tp*(x.volume||0); vv+=(x.volume||0); return vv?pv/vv:tp; }); }
 
 /* ---------- Charts ---------- */
@@ -320,6 +393,20 @@ const bandFill = {
     for(let k=bot.length-1;k>=0;k--) ctx.lineTo(bot[k][0],bot[k][1]); ctx.closePath(); ctx.fillStyle="rgba(41,98,255,0.09)"; ctx.fill(); }); } }) }]; }
 };
 candles.attachPrimitive(bandFill);
+/* Ichimoku cloud: green where Span A is above Span B, red otherwise */
+const cloudFill = {
+  a:[], b:[],
+  attached(p){ this.chart=p.chart; this.series=p.series; this.req=p.requestUpdate; }, detached(){},
+  set(a,b){ this.a=a; this.b=b; if(this.req) this.req(); }, updateAllViews(){},
+  paneViews(){ const self=this; return [{ zOrder:()=>"bottom", renderer:()=>({ draw(target){ target.useMediaCoordinateSpace(({context:ctx})=>{
+    if(!self.chart||self.a.length!==bars.length) return; const ts=self.chart.timeScale(), y=v=>self.series.priceToCoordinate(v);
+    for(let i=0;i+1<bars.length;i++){ const a0=self.a[i], b0=self.b[i], a1=self.a[i+1], b1=self.b[i+1]; if(a0==null||b0==null||a1==null||b1==null) continue;
+      const x0=ts.timeToCoordinate(bars[i].time), x1=ts.timeToCoordinate(bars[i+1].time); if(x0==null||x1==null) continue;
+      const p=[y(a0),y(a1),y(b1),y(b0)]; if(p.some(v=>v==null)) continue;
+      ctx.beginPath(); ctx.moveTo(x0,p[0]); ctx.lineTo(x1,p[1]); ctx.lineTo(x1,p[2]); ctx.lineTo(x0,p[3]); ctx.closePath();
+      ctx.fillStyle = a0>=b0 ? "rgba(67,160,71,0.16)" : "rgba(244,67,54,0.16)"; ctx.fill(); } }); } }) }]; }
+};
+candles.attachPrimitive(cloudFill);
 const panes = {};
 for(const p of PANES){
   const c = mk($("p-"+p)); c.applyOptions({timeScale:{visible:false},layout:{attributionLogo:false}}); panes[p] = {chart:c, series:[]};
@@ -329,7 +416,7 @@ const line = (chart,color,w=1.5,extra={}) => chart.addLineSeries({color,lineWidt
 const toSeries = (vals) => vals.map((v,i)=>v==null?{time:bars[i].time}:{time:bars[i].time,value:v});
 /* Multi-timeframe: each chart bar takes the latest value of the other timeframe that started before the next chart bar */
 const htfStore = {};
-const htfKeyFor = res => cur.symbol+"|"+(cur.mic||"")+"|"+res;
+const htfKeyFor = res => kOf(cur)+"|"+res;
 const getHtf = res => htfStore[htfKeyFor(res)];
 const needsHtf = id => { const r=P(id).res; return active.has(id) && r!=="chart" && r!==interval; };
 function mapHtf(vals, hb){ const out=[]; let j=-1;
@@ -340,7 +427,7 @@ async function ensureHtf(){
   const want=[...new Set(["cmma","cmmacd"].filter(needsHtf).map(id=>P(id).res))];
   for(const res of want){ const key=htfKeyFor(res); if(htfStore[key]) continue;
     htfStore[key]={bars:[],loading:true};
-    try{ const rows=await td("get_time_series",{symbol:cur.symbol,mic_code:cur.mic,interval:res,outputsize:5000},300000); htfStore[key]={bars:rowsToBars(rows)}; }
+    try{ htfStore[key]={bars:await fetchBars({...cur},res,cur.src==="ib"?1000:5000,300000)}; }
     catch(e){ htfStore[key]={bars:[],err:true}; }
     if(htfKeyFor(res)===key&&bars.length) renderIndicators(); }
 }
@@ -368,6 +455,7 @@ function renderIndicators(){
   const leg=[];
   const add = (id, s) => (overlays[id] ||= []).push(s);
   if(!active.has("bb")) bandFill.set([],[]);
+  if(!active.has("ichi")) cloudFill.set([],[]);
   volS.setData(active.has("vol") ? bars.map(b=>({time:b.time,value:b.volume||0,color:(b.close>=b.open?css("--up"):css("--down"))+"55"})) : []);
   for(const d of IND){
     if(!active.has(d.id) || d.id==="vol") continue;
@@ -388,6 +476,23 @@ function renderIndicators(){
         ds.setData(m1.vals.map((v,i)=>{ const w=m2.vals[i], pv=m1.vals[i-1], pw=m2.vals[i-1]; return v==null||w==null||pv==null||pw==null||(pv>=pw)===(v>=w)?{time:bars[i].time}:{time:bars[i].time,value:v}; })); add(d.id,ds); }
       const tn=t=>(PDEF.cmma[3].opts.find(o=>o[0]===String(t))||["","SMA"])[1]; const rl=(PDEF.cmma[0].opts.find(o=>o[0]===q.res)||["","?"])[1];
       leg.push(`<span style="color:#00e676">CM MA ${rl} · ${tn(q.type)} ${q.len}${q.ma2?" / "+tn(q.type2)+" "+q.len2:""}${m1.note}</span>`); continue; }
+    if(d.id==="st"){ const q=P("st"), r=supertrend(h,l,c,q.len,q.mult); const s=line(main,"#00c853",2);
+      s.setData(r.v.map((v,i)=>v==null?{time:bars[i].time}:{time:bars[i].time,value:v,color:r.dir[i]===1?"#00c853":"#f23645"})); add(d.id,s);
+      leg.push(`<span style="color:#00c853">SuperTrend ${q.len} ${q.mult}</span>`); continue; }
+    if(d.id==="ichi"){ const q=P("ichi"), r=ichimoku(h,l,c,q);
+      [[r.t,"#2962ff"],[r.k,"#b71c1c"],[r.ch,"#7e57c2"],[r.a,"#43a047"],[r.b,"#f23645"]].forEach(([arr,col],k)=>{ const s=line(main,col,k<2?1.5:1); s.setData(toSeries(arr)); add(d.id,s); });
+      cloudFill.set(r.a,r.b); leg.push(`<span style="color:#2962ff">Ichimoku ${q.t} ${q.k} ${q.s} ${q.d}</span>`); continue; }
+    if(d.id==="kc"){ const q=P("kc"), m=ema(c,q.len), a=atrOf(h,l,c,q.atr);
+      [m, m.map((v,i)=>v==null||a[i]==null?null:v+q.mult*a[i]), m.map((v,i)=>v==null||a[i]==null?null:v-q.mult*a[i])].forEach((arr,k)=>{ const s=line(main,"#26a69a",k?1:1.5,k?{}:{lineStyle:2}); s.setData(toSeries(arr)); add(d.id,s); });
+      leg.push(`<span style="color:#26a69a">KC ${q.len} ${q.mult} ${q.atr}</span>`); continue; }
+    if(d.id==="dc"){ const q=P("dc"); const up=c.map((_,i)=>i<q.len-1?null:Math.max(...h.slice(i-q.len+1,i+1))), lo=c.map((_,i)=>i<q.len-1?null:Math.min(...l.slice(i-q.len+1,i+1)));
+      [[up,"#2196f3"],[lo,"#2196f3"],[up.map((v,i)=>v==null?null:(v+lo[i])/2),"#ff6d00"]].forEach(([arr,col])=>{ const s=line(main,col,1); s.setData(toSeries(arr)); add(d.id,s); });
+      leg.push(`<span style="color:#2196f3">Donchian ${q.len}</span>`); continue; }
+    if(d.id==="atr"){ const p=panes.atr, q=P("atr"); const s=line(p.chart,d.color,1.5,{lastValueVisible:true}); s.setData(toSeries(atrOf(h,l,c,q.len))); p.series.push(s); $("l-atr").textContent=`ATR ${q.len}`; }
+    if(d.id==="adx"){ const p=panes.adx, q=P("adx"), r=dmi(h,l,c,q.len); const a=line(p.chart,"#ff9800",2), b=line(p.chart,"#26a69a"), e=line(p.chart,"#ef5350");
+      a.setData(toSeries(r.adx)); b.setData(toSeries(r.pdi)); e.setData(toSeries(r.mdi)); a.createPriceLine({price:25,color:css("--muted"),lineStyle:2,lineWidth:1,axisLabelVisible:false}); p.series.push(a,b,e);
+      $("l-adx").innerHTML=`ADX ${q.len} · <span style="color:#26a69a">+DI</span> <span style="color:#ef5350">−DI</span>`; }
+    if(d.id==="obv"){ const p=panes.obv; const s=line(p.chart,d.color,1.5,{lastValueVisible:true,priceFormat:{type:"volume"}}); s.setData(toSeries(obvOf(bars))); p.series.push(s); }
     if(d.id==="rsi"){ const p=panes.rsi; const s=line(p.chart,d.color); s.setData(toSeries(rsi(c)));
       s.createPriceLine({price:70,color:css("--down"),lineStyle:2,lineWidth:1,axisLabelVisible:false}); s.createPriceLine({price:30,color:css("--up"),lineStyle:2,lineWidth:1,axisLabelVisible:false}); p.series.push(s); }
     if(d.id==="macd"){ const p=panes.macd; const r=macd(c);
@@ -420,11 +525,14 @@ function renderIndicators(){
     if(d.pane==="main") leg.push(`<span style="color:${d.color}">${d.name}</span>`);
   }
   $("legend").innerHTML = leg.join("");
-  for(const p of PANES) $("p-"+p).hidden = !active.has(p);
+  let shown=false; const keep=main.timeScale().getVisibleLogicalRange();
+  for(const p of PANES){ const h=!active.has(p); if($("p-"+p).hidden&&!h) shown=true; $("p-"+p).hidden=h; }
+  /* A pane that just appeared reports its own default range; put everything back to the main chart's range */
+  if(shown&&keep){ syncing=true; requestAnimationFrame(()=>requestAnimationFrame(()=>{ all().forEach(c=>c.timeScale().setVisibleLogicalRange(keep)); syncing=false; })); }
 }
 
 /* ---------- Drawings (per symbol, stored in this browser) ---------- */
-const dKey = () => "draw:"+cur.symbol+":"+(cur.mic||"");
+const dKey = () => "draw:"+(cur.src==="ib"?"ib:":"")+cur.symbol+":"+(cur.mic||"");
 const FIB = [0, .236, .382, .5, .618, .786, 1];
 let drawn = [], pendingPreview = null;
 /* Rectangles, Fibonacci and text are painted on the chart canvas */
@@ -484,12 +592,14 @@ main.subscribeClick(param=>{
 
 /* ---------- Price alerts (checked while this page is open) ---------- */
 let alerts = store.get("alerts", []);
-const sameSym = (a,b) => a.symbol===b.symbol && (a.mic||"")===(b.mic||"");
+const kOf = s => (s.src==="ib"?"ib":"td")+":"+s.symbol+":"+(s.mic||"");
+const sameSym = (a,b) => kOf(a)===kOf(b);
+const symOf = s => { const o={symbol:s.symbol,mic:s.mic||"",name:s.name||""}; ["src","base","sec","ex","conid","root"].forEach(k=>{ if(s[k]!=null&&s[k]!=="") o[k]=s[k]; }); return o; };
 const lastPrice = () => bars.length ? bars[bars.length-1].close : null;
 function saveAlerts(){ store.set("alerts",alerts); renderAlerts(); renderDrawings(); }
 function addAlert(price){
   const lp=lastPrice(); const dir = lp==null||price>=lp ? "above" : "below";
-  alerts.push({id:Date.now().toString(36), symbol:cur.symbol, mic:cur.mic||"", name:cur.name||"", price:+price.toPrecision(6), dir, hit:null});
+  alerts.push({id:Date.now().toString(36), ...symOf(cur), price:+price.toPrecision(6), dir, hit:null});
   saveAlerts(); setTool("cursor"); unlockSound();
 }
 function renderAlerts(){
@@ -499,7 +609,7 @@ function renderAlerts(){
     const g=document.createElement("button"); g.className="go"; const l=document.createElement("span"), r=document.createElement("span");
     l.textContent=a.symbol; r.textContent=(a.dir==="above"?"≥ ":"≤ ")+fmt(a.price)+(a.hit?" ✓":""); g.append(l,r);
     g.title = a.hit ? "Ausgelöst "+new Date(a.hit).toLocaleString("de-DE") : (a.dir==="above"?"Alarm, wenn der Kurs steigt auf ":"Alarm, wenn der Kurs fällt auf ")+fmt(a.price);
-    g.onclick=()=>select({symbol:a.symbol,mic:a.mic,name:a.name});
+    g.onclick=()=>select(symOf(a));
     const rm=document.createElement("button"); rm.className="rm"; rm.textContent="×"; rm.setAttribute("aria-label","Alarm "+a.symbol+" entfernen");
     rm.onclick=()=>{ alerts.splice(i,1); saveAlerts(); };
     li.append(g,rm); ul.appendChild(li); });
@@ -544,19 +654,79 @@ function parsePayload(p){
 }
 async function td(tool, input, staleMs=60000){
   const args = Object.fromEntries(Object.entries(input).filter(([,v])=>v!==""&&v!=null));
-  const res = await mcp.callTool(SERVER, tool, args, {cache:{staleTime:staleMs,gcTime:Math.max(staleMs,300000)}});
-  return parsePayload(res.payload);
+  try{ const res = await mcp.callTool(TD, tool, args, {cache:{staleTime:staleMs,gcTime:Math.max(staleMs,300000)}});
+    return parsePayload(res.payload); }catch(e){ if(e&&typeof e==="object"&&!e.server) e.server=TD; throw e; }
+}
+async function ib(tool, input, staleMs=60000){
+  let res; try{ res = await mcp.callTool(IB, tool, input, {cache:{staleTime:staleMs,gcTime:Math.max(staleMs,300000)}}); }
+  catch(e){ if(e&&typeof e==="object") e.server=IB; throw e; }
+  let pl = res.payload; if(typeof pl==="string"){ try{ pl=JSON.parse(pl); }catch(e){ throw {code:"tool_error",server:IB,message:pl}; } }
+  return pl;
 }
 function errText(e){
+  const ibk = e&&e.server===IB, n = ibk ? "Interactive Brokers" : "Twelve Data";
   switch(e&&e.code){
-    case "server_not_connected": return "Der Twelve-Data-Connector ist nicht verbunden. Füge ihn in claude.ai unter Einstellungen → Connectors hinzu.";
-    case "needs_reauth": return "Die Anmeldung bei Twelve Data ist abgelaufen. Verbinde den Connector in claude.ai unter Einstellungen → Connectors neu.";
-    case "not_in_manifest": case "approval_required": return "Diese Seite darf Twelve Data noch nicht nutzen. Erlaube den Zugriff in der Abfrage oder im Berechtigungsmenü des Artifacts.";
-    case "selection_required": return "Es gibt mehrere Twelve-Data-Connectors. Wähle einen in der Abfrage von claude.ai aus.";
-    case "server_unavailable": return "Twelve Data antwortet gerade nicht. Versuche es in ein paar Sekunden noch einmal.";
-    case "tool_error": return "Twelve Data hat die Anfrage abgelehnt: " + String(e.message||"").slice(0,200) + " (Oft: Börse nicht im Tarif enthalten oder Minutenlimit erreicht.)";
+    case "server_not_connected": return `Der ${n}-Connector ist nicht verbunden. Füge ihn in claude.ai unter Einstellungen → Connectors hinzu.`;
+    case "needs_reauth": return `Die Anmeldung bei ${n} ist abgelaufen. Verbinde den Connector in claude.ai unter Einstellungen → Connectors neu.`;
+    case "not_in_manifest": case "approval_required": return `Diese Seite darf ${n} noch nicht nutzen. Erlaube den Zugriff in der Abfrage oder im Berechtigungsmenü des Artifacts.`;
+    case "selection_required": return `Es gibt mehrere ${n}-Connectors. Wähle einen in der Abfrage von claude.ai aus.`;
+    case "server_unavailable": return `${n} antwortet gerade nicht. Versuche es in ein paar Sekunden noch einmal.`;
+    case "tool_error": return `${n} hat die Anfrage abgelehnt: ` + String(e.message||"").slice(0,200) + (ibk ? " (Oft: kein Marktdaten-Abo für diese Börse.)" : " (Oft: Börse nicht im Tarif enthalten oder Minutenlimit erreicht.)");
     default: return "Daten konnten nicht geladen werden ("+(e&&e.code||"Fehler")+").";
   }
+}
+/* ---------- Interactive Brokers: real indices, futures (front month) and watchlist prices ---------- */
+const IBX = [
+  ["NDX","Nasdaq-100 Index","IND","NASDAQ",416843],["SPX","S&P 500 Index","IND","CBOE",416904],["INDU","Dow Jones Industrial Average","IND",""],
+  ["RUT","Russell 2000 Index","IND",""],["VIX","CBOE Volatilitätsindex","IND","CBOE"],
+  ["NQ","Nasdaq-100 E-mini Future","FUT","CME"],["ES","S&P 500 E-mini Future","FUT","CME"],["YM","Dow E-mini Future","FUT","CBOT"],["RTY","Russell 2000 E-mini Future","FUT","CME"],
+  ["CL","WTI Rohöl Future","FUT","NYMEX",17340715],["GC","Gold Future","FUT","COMEX"],["SI","Silber Future","FUT","COMEX"],["PL","Platin Future","FUT","NYMEX"],["NG","Erdgas Future","FUT","NYMEX"]
+].map(([base,name,sec,ex,id])=>({symbol:sec==="FUT"?base+"1!":base, base, name, sec, ex, mic:"", src:"ib", ...(id?(sec==="FUT"?{root:id}:{conid:id}):{})}));
+const ibPreset = sym => IBX.find(x=>x.symbol===sym);
+const ymd = d => d.toISOString().slice(0,10).replace(/-/g,"");
+const rollDate = () => ymd(new Date(Date.now()+3*86400000));
+async function ibContract(s){
+  if(s.src!=="ib"&&s.conid) return {conid:+s.conid, ex:s.ex||"SMART", sec:s.sec||"STK"};
+  const base=s.base||s.symbol, sec=s.sec||"STK", k=base+"|"+sec, cache=store.get("ibc",{});
+  let r = s.conid ? {conid:s.conid, ex:s.ex} : s.root ? {conid:s.root, ex:s.ex} : cache[k];
+  if(r&&r.fail&&Date.now()-r.fail<86400000) throw {code:"tool_error",server:IB,message:"Kein IBKR-Kontrakt für "+base+"."};
+  if(!r||r.fail){
+    const res=await ib("search_contracts",{query:s.q||base},86400000), rows=(res&&res.results)||[];
+    const c=rows.filter(x=>x.symbol===(s.ibSym||base)&&(x.sections||[]).some(z=>z.security_type===sec));
+    const pick=c.find(x=>s.ex&&x.exchange===s.ex)||c.find(x=>x.country_code==="US")||c[0];
+    if(!pick){ cache[k]={fail:Date.now()}; store.set("ibc",cache); throw {code:"tool_error",server:IB,message:"Kein IBKR-Kontrakt für "+base+" gefunden."}; }
+    r={conid:pick.underlying_contract_id, ex:pick.exchange}; cache[k]=r; store.set("ibc",cache);
+  }
+  if(sec!=="FUT") return {conid:r.conid, ex:sec==="STK"?"SMART":r.ex, sec};
+  const fk="fm:"+r.conid; let fm=store.get(fk,null);
+  if(fm&&fm.ltd>rollDate()) return fm;
+  const fr=await ib("search_futures",{underlying_contract_id:r.conid},3600000);
+  const list=((fr&&fr.contracts)||[]).filter(x=>x.last_trading_date>rollDate()).sort((a,b)=>a.last_trading_date.localeCompare(b.last_trading_date));
+  if(!list.length) throw {code:"tool_error",server:IB,message:"Kein aktiver Kontrakt für "+base+"."};
+  fm={conid:list[0].contract_id, ex:list[0].exchange, sec:"FUT", ltd:list[0].last_trading_date, month:list[0].contract_month}; store.set(fk,fm); return fm;
+}
+const IBSTEP = {"15min":"FIFTEEN_MINS","30min":"THIRTY_MINS","1h":"ONE_HOUR","4h":"FOUR_HOURS","1day":"ONE_DAY","1week":"ONE_WEEK","1month":"ONE_MONTH"};
+let ibInfo = {};
+async function ibBars(s, iv, count, staleMs){
+  const c=await ibContract(s);
+  const r=await ib("get_price_history",{contract_id:c.conid,security_type:c.sec,step:IBSTEP[iv],step_count:Math.min(count,1000),outside_rth:c.sec!=="STK",exchange:c.ex},staleMs);
+  if(!r||!Array.isArray(r.time)) throw {code:"tool_error",server:IB,message:"Keine Kursdaten von IBKR."};
+  ibInfo={key:kOf(s), delayed:r.delayed, month:c.month, ex:c.ex, sec:c.sec, conid:c.conid};
+  const b=r.time.map((t,i)=>({time:Math.floor(Date.parse(t)/1000),open:+r.open[i],high:+r.high[i],low:+r.low[i],close:+r.close[i],volume:r.volume?+r.volume[i]||0:0}))
+    .filter(x=>!isNaN(x.time)&&!isNaN(x.close)).sort((x,y)=>x.time-y.time);
+  return b.filter((x,i)=>i===0||x.time!==b[i-1].time);
+}
+const snapRead = o => { if(!o) return null; const last=o.last&&o.last.price, ch=o.change||{}, pc=o["prior-close"]&&o["prior-close"].priorClose;
+  if(last==null) return null; let d=ch.change, pp=ch.change_pct; if(d==null&&pc){ d=last-pc; pp=(last/pc-1)*100; } return {px:last, chg:d, pct:pp}; };
+async function quoteOf(s){
+  if(s.src==="ib"){ const c=await ibContract(s); const r=await ib("get_price_snapshot",{contract_id:c.conid,exchange:c.ex,market_data_names:["last","change","prior_close"]},20000);
+    return snapRead(r); }
+  const q=(await td("get_quote",{symbol:s.symbol,mic_code:s.mic},30000))[0]; if(!q) return null;
+  return {px:+q.close, chg:+q.change, pct:+q.percent_change, cur:q.currency, name:q.name, exch:q.exchange};
+}
+async function fetchBars(s, iv, count, staleMs){
+  if(s.src==="ib") return ibBars(s, iv, count, staleMs);
+  return rowsToBars(await td("get_time_series",{symbol:s.symbol,mic_code:s.mic,interval:iv,outputsize:count},staleMs));
 }
 const toTime = s => Math.floor(Date.parse(String(s).replace(" ","T")+(String(s).length<=10?"T00:00:00Z":"Z"))/1000);
 
@@ -577,13 +747,15 @@ function rowsToBars(rows){
 async function load(){
   $("hSym").textContent=cur.symbol; $("hName").textContent=cur.name||""; renderWatch();
   if(!live){ bars=demoBars(); msg(""); paint(); $("hName").textContent="Beispieldaten (keine echten Kurse)"; return; }
-  msg("Lade "+cur.symbol+" …");
+  msg("Lade "+cur.symbol+" …"); const want=kOf(cur)+"|"+interval;
   try{
-    const rows = await td("get_time_series",{symbol:cur.symbol,mic_code:cur.mic,interval,outputsize:interval==="1month"?240:800}, interval.includes("min")||interval.includes("h")?60000:600000);
-    if(!Array.isArray(rows)||!rows.length) throw {code:"tool_error",message:"Keine Kursdaten erhalten."};
-    bars = rowsToBars(rows);
+    const b = await fetchBars(cur, interval, interval==="1month"?240:800, interval.includes("min")||interval.includes("h")?60000:600000);
+    if(want!==kOf(cur)+"|"+interval) return;
+    if(!b.length) throw {code:"tool_error",server:cur.src==="ib"?IB:TD,message:"Keine Kursdaten erhalten."};
+    bars = b;
     msg(""); paint(); loadQuote(); ensureHtf();
-  }catch(e){ msg(errText(e)); }
+    if(cur.src==="ib") $("hName").textContent=(cur.name||"")+(ibInfo.month?" · Kontrakt "+ibInfo.month.slice(4)+"/"+ibInfo.month.slice(0,4):"")+" · IBKR"+(ibInfo.delayed?" · "+Math.round(ibInfo.delayed/60)+" Min. verzögert":"");
+  }catch(e){ if(want===kOf(cur)+"|"+interval) msg(errText(e)); }
 }
 function paint(keepRange){
   candles.setData(bars); renderIndicators(); renderDrawings();
@@ -594,10 +766,11 @@ function paint(keepRange){
 }
 function setChg(abs,p){ const el=$("hChg"); el.textContent=(abs>=0?"+":"")+fmt(abs)+" ("+(p>=0?"+":"")+fmt(p)+" %)"; el.className="chg "+(abs>=0?"up":"down"); }
 async function loadQuote(){
-  try{ const q=(await td("get_quote",{symbol:cur.symbol,mic_code:cur.mic},30000))[0]; if(!q) return;
-    $("hPx").textContent=fmt(+q.close)+" "+(q.currency||""); setChg(+q.change,+q.percent_change);
-    checkAlerts(cur, +q.close, +q.close);
-    if(q.name){ $("hName").textContent=q.name+" · "+(q.exchange||""); }
+  const s={...cur};
+  try{ const q=await quoteOf(s); if(!q||!sameSym(s,cur)) return;
+    $("hPx").textContent=fmt(q.px)+(q.cur?" "+q.cur:""); if(q.chg!=null) setChg(q.chg,q.pct);
+    checkAlerts(s, q.px, q.px); priceCache[kOf(s)]={px:q.px,pct:q.pct}; paintPrices();
+    if(q.name){ $("hName").textContent=q.name+" · "+(q.exch||""); }
   }catch(e){}
 }
 
@@ -605,6 +778,12 @@ async function loadQuote(){
 async function loadInfo(){
   const box=$("info");
   if(!live){ box.innerHTML=`<section><h3>Firma</h3><p class="note">Firmendaten kommen live aus Twelve Data, sobald der Connector für diese Seite freigegeben ist.</p></section>`; return; }
+  if(cur.src==="ib"){ const c=await ibContract(cur).catch(e=>null);
+    box.innerHTML=`<section><p class="co"></p><div class="sub">${cur.sec==="FUT"?"Future, fortlaufend (Frontmonat)":"Index"} · Interactive Brokers</div>
+      <dl class="kv" style="margin-top:10px"><dt>Börse</dt><dd>${c?c.ex:"–"}</dd>${c&&c.month?`<dt>Kontrakt</dt><dd>${c.month.slice(4)}/${c.month.slice(0,4)}</dd><dt>Letzter Handelstag</dt><dd>${c.ltd.slice(6)}.${c.ltd.slice(4,6)}.${c.ltd.slice(0,4)}</dd>`:""}
+      <dt>Verzögerung</dt><dd>${ibInfo.key===kOf(cur)&&ibInfo.delayed?Math.round(ibInfo.delayed/60)+" Min.":"je nach Abo"}</dd></dl></section>
+      <section><p class="note">Kurse kommen über deinen Interactive-Brokers-Connector. Ohne Echtzeit-Abo für die Börse sind sie 10 bis 15 Minuten verzögert. Futures rollen 3 Tage vor dem letzten Handelstag automatisch auf den nächsten Kontrakt.</p></section>`;
+    box.querySelector(".co").textContent=cur.name||cur.symbol; return; }
   box.innerHTML=`<section><p class="note">Lade Firmendaten für ${cur.symbol} …</p></section>`;
   const [pr, st, q] = await Promise.allSettled([
     td("get_company_info",{symbol:cur.symbol,mic_code:cur.mic},86400000),
@@ -642,25 +821,149 @@ async function search(v){
   const box=$("results"); box.hidden=false;
   if(!live){ box.innerHTML=`<div class="note" style="padding:10px">Suche braucht den Twelve-Data-Connector.</div>`; return; }
   const seq=++sSeq; box.innerHTML=`<div class="note" style="padding:10px">Suche …</div>`;
+  const V=v.toUpperCase(), pre=IBX.filter(x=>x.symbol.startsWith(V)||x.base===V||x.name.toUpperCase().includes(V));
+  const addPre=()=>pre.forEach(x=>{ const b=document.createElement("button"); b.innerHTML=`<span class="sym"></span><span class="nm"></span><span class="ex"></span>`;
+    b.querySelector(".sym").textContent=x.symbol; b.querySelector(".nm").textContent=x.name; b.querySelector(".ex").textContent="IBKR · "+(x.sec==="FUT"?"Future":"Index");
+    b.onclick=()=>{ select(symOf(x)); box.hidden=true; $("q").value=""; }; box.appendChild(b); });
   try{ const r=await td("search_symbol",{symbol:v,outputsize:12},600000); if(seq!==sSeq) return;
-    box.innerHTML=""; if(!r.length){ box.innerHTML=`<div class="note" style="padding:10px">Nichts gefunden.</div>`; return; }
+    box.innerHTML=""; addPre(); if(!r.length&&!pre.length){ box.innerHTML=`<div class="note" style="padding:10px">Nichts gefunden.</div>`; return; }
     r.forEach(x=>{ const b=document.createElement("button"); b.innerHTML=`<span class="sym"></span><span class="nm"></span><span class="ex"></span>`;
       b.querySelector(".sym").textContent=x.symbol; b.querySelector(".nm").textContent=x.instrument_name; b.querySelector(".ex").textContent=(x.exchange||"")+" "+(x.currency||"");
       b.onclick=()=>{ select({symbol:x.symbol,mic:x.mic_code||"",name:x.instrument_name}); box.hidden=true; $("q").value=""; }; box.appendChild(b); });
-  }catch(e){ if(seq===sSeq) box.innerHTML=`<div class="err" style="padding:10px"></div>`, box.firstChild.textContent=errText(e); }
+  }catch(e){ if(seq!==sSeq) return; box.innerHTML=""; addPre(); const d=document.createElement("div"); d.className="err"; d.style.padding="10px"; d.textContent=errText(e); box.appendChild(d); }
 }
-function select(s){ cur=s; store.set("cur",cur); load(); if(!$("info").querySelector(".note")||$("info").querySelector(".co")) loadInfo(); }
+function select(s){ cur=symOf(s); store.set("cur",cur); load(); if(!$("info").querySelector(".note")||$("info").querySelector(".co")) loadInfo(); }
 
-/* ---------- Watchlist ---------- */
+/* ---------- Watchlists (several lists with sections, like TradingView) ---------- */
+let lists = store.get("lists", null);
+if(!lists){ lists=[{id:"l"+Date.now().toString(36), name:"Meine Liste", items:watch.map(symOf)}]; store.set("lists",lists); }
+let curList = store.get("curList", lists[0].id);
+const L = () => lists.find(x=>x.id===curList) || lists[0];
+const saveLists = () => { store.set("lists",lists); store.set("curList",curList); };
+const priceCache = {};
 function renderWatch(){
-  const ul=$("wl"); ul.innerHTML="";
-  watch.forEach((w,i)=>{ const li=document.createElement("li"); if(w.symbol===cur.symbol&&w.mic===cur.mic) li.className="on";
-    const g=document.createElement("button"); g.className="go"; g.textContent=w.symbol; g.title=w.name||""; g.onclick=()=>select(w);
-    const rm=document.createElement("button"); rm.className="rm"; rm.textContent="×"; rm.setAttribute("aria-label",w.symbol+" entfernen"); rm.onclick=()=>{ watch.splice(i,1); store.set("watch",watch); renderWatch(); };
-    li.append(g,rm); ul.appendChild(li); });
-  if(!watch.length) ul.innerHTML=`<li class="wl-hint">Suche ein Wertpapier und klicke „+ Watchlist“.</li>`;
+  const sel=$("wlSel"); sel.innerHTML="";
+  lists.forEach(l=>{ const o=document.createElement("option"); o.value=l.id; o.textContent=`${l.name} (${l.items.filter(x=>!x.section).length})`; sel.appendChild(o); });
+  sel.value=L().id;
+  const ul=$("wl"); ul.innerHTML=""; const list=L(), closed=new Set(list.closed||[]); let hide=false;
+  list.items.forEach((w,i)=>{ const li=document.createElement("li");
+    const rm=document.createElement("button"); rm.className="rm"; rm.textContent="×";
+    rm.onclick=()=>{ list.items.splice(i,1); saveLists(); renderWatch(); };
+    if(w.section){ hide=closed.has(w.section); li.className="sec"; const g=document.createElement("button"); g.className="go"; g.textContent=(hide?"▸ ":"▾ ")+w.section;
+      g.setAttribute("aria-expanded",String(!hide)); g.onclick=()=>{ closed.has(w.section)?closed.delete(w.section):closed.add(w.section); list.closed=[...closed]; saveLists(); renderWatch(); };
+      rm.setAttribute("aria-label","Abschnitt "+w.section+" entfernen"); li.append(g,rm); ul.appendChild(li); return; }
+    if(hide) return;
+    if(sameSym(w,cur)) li.className="on";
+    const g=document.createElement("button"); g.className="go"; g.title=w.name||""; g.dataset.k=kOf(w);
+    const a=document.createElement("span"), b=document.createElement("span"), c=document.createElement("span"); a.className="sy"; b.className="px"; c.className="pc";
+    a.textContent=w.symbol; g.append(a,b,c); g.onclick=()=>select(w);
+    rm.setAttribute("aria-label",w.symbol+" entfernen"); li.append(g,rm); ul.appendChild(li); });
+  if(!list.items.length) ul.innerHTML=`<li class="wl-hint">Suche ein Wertpapier und klicke „+ Liste“, oder importiere deine Listen über ⋯.</li>`;
+  paintPrices();
 }
-$("wlAdd").onclick=()=>{ if(!watch.some(w=>w.symbol===cur.symbol&&w.mic===cur.mic)){ watch.push({...cur}); store.set("watch",watch); renderWatch(); } };
+function paintPrices(){
+  $("wl").querySelectorAll("button.go[data-k]").forEach(g=>{ const q=priceCache[g.dataset.k]; const px=g.querySelector(".px"), pc=g.querySelector(".pc");
+    if(!q){ px.textContent=""; pc.textContent=""; return; }
+    px.textContent=fmt(q.px, q.px>=1000?1:q.px<1?4:2); pc.textContent=q.pct==null||isNaN(q.pct)?"":(q.pct>=0?"+":"")+fmt(q.pct)+"%"; pc.className="pc "+(q.pct>=0?"up":"down"); });
+}
+/* Maps a watchlist entry to something IBKR can price: indices/futures directly, stocks by ticker, metals, crypto, FX */
+const CRYPTO = new Set(["BTC","ETH","SOL","XRP","LTC","BCH","ADA","DOGE","AVAX","LINK","DOT","UNI","SHIB"]);
+function ibKeyOf(w){
+  if(w.src==="ib") return w;
+  if(w.conid) return {symbol:w.symbol, conid:+w.conid, ex:w.ex||"SMART", sec:w.sec||"STK"};
+  if(w.mic&&!["XNYS","XNAS","XNGS","XNMS","ARCX","BATS","XASE",""].includes(w.mic)) return null;
+  const m=/^([A-Z0-9]{2,6})\/([A-Z]{3})$/.exec(w.symbol);
+  if(m){ if(/^X(AU|AG|PT|PD)$/.test(m[1])) return {base:m[1]+m[2], sec:"CMDTY", symbol:w.symbol};
+    if(CRYPTO.has(m[1])) return {base:m[1], sec:"CRYPTO", symbol:w.symbol};
+    return {base:m[1], sec:"CASH", ibSym:m[1]+"."+m[2], q:m[1]+"."+m[2], symbol:w.symbol}; }
+  if(!/^[A-Z][A-Z.\-]{0,6}$/.test(w.symbol)) return null;
+  return {base:w.symbol.replace("."," "), q:w.symbol.replace("."," "), sec:"STK", symbol:w.symbol};
+}
+let pricing=false;
+async function updatePrices(){
+  if(!live||pricing||document.hidden) return; pricing=true;
+  try{
+    const items=L().items.filter(x=>!x.section).slice(0,100), ready=[]; let resolves=0;
+    for(const w of items){ const k=ibKeyOf(w); if(!k) continue;
+      const known = k.conid || k.root || (store.get("ibc",{})[(k.base||k.symbol)+"|"+(k.sec||"STK")]);
+      if(!known){ if(resolves>=4) continue; resolves++; }
+      try{ const c=await ibContract(k); ready.push([kOf(w), c.conid+"@"+c.ex]); }catch(e){ if(e&&e.code&&e.code!=="tool_error") throw e; } }
+    for(let i=0;i<ready.length;i+=33){ const part=ready.slice(i,i+33);
+      const r=await ib("get_price_snapshot",{contract_id_exs:[...new Set(part.map(x=>x[1]))],market_data_names:["last","change","prior_close"]},20000);
+      part.forEach(([k,id])=>{ const q=snapRead(r&&r[id]); if(q) priceCache[k]={...q,t:Date.now()}; }); }
+    paintPrices();
+    if(resolves>=4) setTimeout(updatePrices, 4000);
+  }catch(e){ /* IBKR not connected: list stays without prices */ }
+  finally{ pricing=false; }
+}
+$("wlSel").onchange=()=>{ curList=$("wlSel").value; saveLists(); renderWatch(); updatePrices(); };
+$("wlAdd").onclick=()=>{ const l=L(); if(!l.items.some(w=>!w.section&&sameSym(w,cur))){ l.items.push(symOf(cur)); saveLists(); renderWatch(); updatePrices(); } };
+
+/* Small modal dialog without browser prompts */
+function dialog(title, bodyHtml, okText, onOk){
+  const d=$("dlg"); $("dlgT").textContent=title; $("dlgB").innerHTML=bodyHtml; $("dlgOk").textContent=okText||"OK"; $("dlgOk").hidden=okText===null;
+  d.onclose=()=>{ if(d.returnValue==="ok") onOk&&onOk($("dlgB")); }; d.returnValue=""; d.showModal();
+  const f=$("dlgB").querySelector("input[type=text],textarea"); if(f) f.focus();
+}
+const esc = t => String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* TradingView list text: "###Abschnitt,NASDAQ:AAPL,TVC:NDX,…" (export file) or one symbol per line */
+const TV_IDX = {NDX:"NDX",NAS100:"NDX",US100:"NDX",USTEC:"NDX",NQ100:"NDX",IXIC:"NDX",SPX:"SPX",SPX500:"SPX",US500:"SPX",SPXUSD:"SPX",DJI:"INDU",US30:"INDU",DJ30:"INDU",WS30:"INDU",RUT:"RUT",US2000:"RUT",RUSSELL2000:"RUT",VIX:"VIX"};
+const TV_FUT = {USOIL:"CL",WTI:"CL",XTIUSD:"CL",WTICOUSD:"CL",USOUSD:"CL",CL:"CL",NATGAS:"NG",XNGUSD:"NG",NGAS:"NG"};
+function tvMap(tok){
+  const t=tok.trim(); if(!t) return null; const [ex,raw]=t.includes(":")?t.split(":"):["",t]; const S=raw.toUpperCase().replace(/\s+/g,"");
+  if(TV_IDX[S]) return symOf(ibPreset(TV_IDX[S]));
+  let m=/^([A-Z]{1,3})\d!$/.exec(S); if(m&&ibPreset(m[1]+"1!")) return symOf(ibPreset(m[1]+"1!"));
+  if(TV_FUT[S]) return symOf(ibPreset(TV_FUT[S]+"1!"));
+  const MET={GOLD:"XAU",SILVER:"XAG",PLATINUM:"XPT",PALLADIUM:"XPD"}; if(MET[S]) return {symbol:MET[S]+"/USD",mic:"",name:t};
+  m=/^(XAU|XAG|XPT|XPD)(USD)$/.exec(S); if(m) return {symbol:m[1]+"/USD",mic:"",name:t};
+  m=/^([A-Z]{2,5})(USDT|USDC|USD|EUR)$/.exec(S); if(m&&CRYPTO.has(m[1])) return {symbol:m[1]+"/"+(m[2]==="EUR"?"EUR":"USD"),mic:"",name:t};
+  m=/^(EUR|USD|GBP|JPY|CHF|AUD|CAD|NZD|TRY|SEK|NOK|PLN|MXN|CNH|HKD|SGD|ZAR)(EUR|USD|GBP|JPY|CHF|AUD|CAD|NZD|TRY|SEK|NOK|PLN|MXN|CNH|HKD|SGD|ZAR)$/.exec(S); if(m) return {symbol:m[1]+"/"+m[2],mic:"",name:t};
+  const MIC={XETR:"XETR",FWB:"XFRA",LSE:"XLON",EURONEXT:"XPAR",SIX:"XSWX",TSX:"XTSE"}; return {symbol:S,mic:MIC[ex.toUpperCase()]||"",name:t};
+}
+function tvParse(text){ const out=[]; text.split(/[\n,]+/).map(x=>x.trim()).filter(Boolean).forEach(tok=>{ if(tok.startsWith("###")){ const n=tok.replace(/^#+/,"").trim(); if(n) out.push({section:n}); } else { const s=tvMap(tok); if(s&&!out.some(o=>!o.section&&sameSym(o,s))) out.push(s); } }); return out; }
+function tvExport(items){
+  const IDX={NDX:"NASDAQ:NDX",SPX:"SP:SPX",INDU:"TVC:DJI",RUT:"TVC:RUT",VIX:"TVC:VIX"}, FX={COMEX:"COMEX",NYMEX:"NYMEX",CME:"CME",CBOT:"CBOT"};
+  return items.map(w=>{ if(w.section) return "###"+w.section;
+    if(w.src==="ib") return w.sec==="FUT" ? (FX[w.ex]||"CME")+":"+w.base+"1!" : (IDX[w.symbol]||w.symbol);
+    const m=/^([A-Z0-9]+)\/([A-Z]+)$/.exec(w.symbol); if(m) return (/^X(AU|AG|PT|PD)$/.test(m[1])?"OANDA:":CRYPTO.has(m[1])?"COINBASE:":"FX:")+m[1]+m[2];
+    const MX={XETR:"XETR",XFRA:"FWB",XLON:"LSE",XPAR:"EURONEXT",XSWX:"SIX",XTSE:"TSX"}; return (MX[w.mic]?MX[w.mic]+":":"")+w.symbol; }).join(","); }
+
+const wlActions = {
+  new(){ dialog("Neue Liste",`<input type="text" id="dNm" placeholder="Name der Liste" maxlength="60">`,"Anlegen",b=>{ const n=b.querySelector("#dNm").value.trim(); if(!n) return;
+    const l={id:"l"+Date.now().toString(36),name:n,items:[]}; lists.push(l); curList=l.id; saveLists(); renderWatch(); }); },
+  ren(){ dialog("Liste umbenennen",`<input type="text" id="dNm" maxlength="60" value="${esc(L().name)}">`,"Speichern",b=>{ const n=b.querySelector("#dNm").value.trim(); if(n){ L().name=n; saveLists(); renderWatch(); } }); },
+  sec(){ dialog("Abschnitt hinzufügen",`<p>Der Abschnitt kommt ans Ende der Liste, so wie „###“-Abschnitte in TradingView.</p><input type="text" id="dNm" placeholder="z. B. Indizes" maxlength="40">`,"Hinzufügen",b=>{ const n=b.querySelector("#dNm").value.trim(); if(n){ L().items.push({section:n}); saveLists(); renderWatch(); } }); },
+  del(){ dialog("Liste löschen",`<p>„${esc(L().name)}“ mit ${L().items.filter(x=>!x.section).length} Werten wird aus diesem Browser gelöscht.</p>`,"Löschen",()=>{ lists=lists.filter(l=>l.id!==L().id);
+    if(!lists.length) lists=[{id:"l"+Date.now().toString(36),name:"Meine Liste",items:[]}]; curList=lists[0].id; saveLists(); renderWatch(); updatePrices(); }); },
+  tv(){ dialog("Aus TradingView importieren",`<p>In TradingView oben in der Watchlist auf den Listennamen klicken, dann „Liste exportieren“. Die .txt-Datei hier auswählen oder den Inhalt einfügen. Abschnitte (###) bleiben erhalten.</p>
+      <input type="file" id="dFile" accept=".txt,text/plain" multiple><textarea id="dTxt" placeholder="###Indizes,TVC:NDX,NASDAQ:QQQ,###Öl,NYMEX:CL1!,AMEX:USO"></textarea>
+      <input type="text" id="dNm" placeholder="Name der neuen Liste (leer = Dateiname)" maxlength="60">`,"Importieren",async b=>{
+      const files=[...b.querySelector("#dFile").files], txt=b.querySelector("#dTxt").value, nm=b.querySelector("#dNm").value.trim(); let made=0;
+      for(const f of files){ const items=tvParse(await f.text()); if(items.length){ lists.push({id:"l"+Date.now().toString(36)+made,name:(files.length===1&&nm)||f.name.replace(/\.txt$/i,""),items}); made++; } }
+      if(txt.trim()){ const items=tvParse(txt); if(items.length){ lists.push({id:"l"+Date.now().toString(36)+"t",name:nm||"TradingView-Import",items}); made++; } }
+      if(made){ curList=lists[lists.length-1].id; saveLists(); renderWatch(); updatePrices(); } }); },
+  async ibk(){ if(!live) return dialog("IBKR-Watchlists","<p>Dafür muss der Interactive-Brokers-Connector verbunden sein.</p>",null);
+    dialog("IBKR-Watchlists importieren",`<p class="note">Lade deine Listen …</p>`,"Importieren",async b=>{ const ids=[...b.querySelectorAll("input:checked")].map(x=>x.value);
+      for(const id of ids){ try{ const w=await ib("get_watchlist",{id},60000);
+        const items=(w.instruments||[]).map(x=>{ const [cid,ex]=String(x.contract_id_ex).split("@"); const d=String(x.contract_description||"").trim();
+          return /^[A-Z][A-Z.]{0,6}$/.test(d) ? {symbol:d,mic:"",name:d,conid:+cid,...(ex?{ex}:{})} : null; }).filter(Boolean);
+        const skipped=(w.instruments||[]).length-items.length;
+        lists.push({id:"ib"+id+"-"+Date.now().toString(36),name:(w.name||"IBKR")+" (IBKR)",items}); curList=lists[lists.length-1].id;
+        if(skipped) toastInfo(`${skipped} Einträge aus „${w.name}“ sind keine Aktien/ETFs und wurden übersprungen.`);
+      }catch(e){ toastInfo(errText(e)); } }
+      saveLists(); renderWatch(); updatePrices(); });
+    try{ const r=await ib("get_watchlists",{},60000); const seen=new Set();
+      const rows=(r.watchlists||[]).filter(w=>{ const k=w.name.trim(); if(seen.has(k)) return false; seen.add(k); return true; });
+      $("dlgB").innerHTML=`<p>Wähle die Listen aus deinem IBKR-Konto. Jede wird hier eine eigene Liste.</p><div class="lst">${rows.map(w=>`<label class="chk"><input type="checkbox" value="${esc(w.id)}"> ${esc(w.name)}</label>`).join("")}</div>`;
+    }catch(e){ $("dlgB").innerHTML=`<p class="err"></p>`; $("dlgB").firstChild.textContent=errText(e); } },
+  exp(){ dialog("Als TradingView-Liste exportieren",`<p>Text kopieren, als .txt speichern und in TradingView über „Liste importieren“ laden.</p><textarea id="dTxt" readonly>${esc(tvExport(L().items))}</textarea>`,null);
+    setTimeout(()=>{ const t=$("dlgB").querySelector("textarea"); if(t){ t.focus(); t.select(); } },50); }
+};
+$("wlMenuBtn").onclick=e=>{ e.stopPropagation(); const m=$("wlMenu"); m.hidden=!m.hidden; $("wlMenuBtn").setAttribute("aria-expanded",String(!m.hidden)); };
+$("wlMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{ $("wlMenu").hidden=true; $("wlMenuBtn").setAttribute("aria-expanded","false"); wlActions[b.dataset.a](); });
+document.addEventListener("click",e=>{ if(!e.target.closest(".wl-bar")){ $("wlMenu").hidden=true; $("wlMenuBtn").setAttribute("aria-expanded","false"); } });
+function toastInfo(text){ const t=document.createElement("div"); t.className="toast"; const p=document.createElement("p"); p.textContent=text; const x=document.createElement("button"); x.textContent="×"; x.setAttribute("aria-label","Hinweis schließen"); x.onclick=()=>t.remove(); t.append(p,x); $("toasts").appendChild(t); setTimeout(()=>t.remove(),9000); }
 
 /* ---------- Timeframe + indicator menu ---------- */
 $("tf").querySelectorAll("button").forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.i===interval));
@@ -678,7 +981,7 @@ IND.forEach((d,ix)=>{ if(d.own&&!IND[ix-1].own){ const g=document.createElement(
       if(f.type==="bool") w.append(inp,t); else w.append(t,inp);
       inp.onchange=()=>{ const v = f.type==="bool"?inp.checked : f.type==="select"?inp.value : parseFloat(inp.value);
         if(f.type!=="bool"&&f.type!=="select"&&!(v>0)) { inp.value=P(d.id)[f.k]; return; }
-        params[d.id]={...(params[d.id]||{}),[f.k]:f.k.endsWith("Len")||["fast","slow","sig"].includes(f.k)?Math.round(v):v}; store.set("params",params);
+        params[d.id]={...(params[d.id]||{}),[f.k]:f.k==="mult"||f.k.endsWith("Mult")||f.type==="select"?v:Math.round(v)}; store.set("params",params);
         if(bars.length) renderIndicators(); ensureHtf(); };
       box.appendChild(w); });
     box.addEventListener("click",e=>e.stopPropagation()); $("indMenu").appendChild(box); } });
@@ -694,22 +997,27 @@ let rr=0;
 async function refresh(){
   if(!live||document.hidden) return;
   const sym={...cur}, iv=interval;
-  try{ const rows=await td("get_time_series",{symbol:sym.symbol,mic_code:sym.mic,interval:iv,outputsize:interval==="1month"?240:800},45000);
-    if(sameSym(sym,cur)&&iv===interval&&Array.isArray(rows)&&rows.length){ bars=rowsToBars(rows); paint(true); } }catch(e){}
+  try{ const b=await fetchBars(sym, iv, iv==="1month"?240:800, 45000);
+    if(sameSym(sym,cur)&&iv===interval&&b.length){ bars=b; paint(true); } }catch(e){}
   loadQuote();
-  const others=[...new Map(alerts.filter(a=>!a.hit&&!sameSym(a,cur)).map(a=>[a.symbol+"|"+a.mic,a])).values()];
+  await updatePrices();
+  const others=[...new Map(alerts.filter(a=>!a.hit&&!sameSym(a,cur)).map(a=>[kOf(a),a])).values()];
   for(let k=0;k<Math.min(3,others.length);k++){ const a=others[(rr+k)%others.length];
-    try{ const q=(await td("get_quote",{symbol:a.symbol,mic_code:a.mic},30000))[0]; if(q) checkAlerts(a, +q.close, +q.close); }catch(e){} }
+    const pc=priceCache[kOf(a)]; if(pc&&pc.t&&Date.now()-pc.t<90000){ checkAlerts(a,pc.px,pc.px); continue; }
+    try{ const q=await quoteOf(a); if(q) checkAlerts(a, q.px, q.px); }catch(e){} }
   rr+=3;
 }
 
 /* ---------- Boot ---------- */
-function setMode(m){ $("dot").className="dot "+(m==="live"?"live":"demo"); $("modeTxt").textContent=m==="live"?"Live: Twelve Data":"Beispieldaten"; }
+function setMode(m){ $("dot").className="dot "+(m==="live"?"live":"demo"); $("modeTxt").textContent=m==="live"?"Live: Twelve Data · IBKR":"Beispieldaten"; }
 renderWatch(); renderAlerts(); bars=demoBars(); paint(); $("hName").textContent="Beispieldaten, bis die Datenverbindung steht";
 (async()=>{
   try{ mcp = window.claude && window.claude.use ? await window.claude.use("mcp") : null; }catch(e){ mcp=null; }
   if(!mcp){ setMode("demo"); load(); return; }
   live=true; setMode("live"); load();
+  if(!store.get("ibIdxV1",false)){ const l=lists[0]; if(!l.items.some(x=>x.src==="ib")){ l.items.unshift({section:"Indizes & Futures (IBKR)"}, ...["NDX","SPX","INDU","RUT","VIX","NQ1!","ES1!","CL1!","GC1!","SI1!"].map(k=>symOf(ibPreset(k))), {section:"Meine Werte"}); }
+    store.set("ibIdxV1",true); saveLists(); renderWatch(); }
+  updatePrices();
   setInterval(refresh, 60000);
 })();
 })();
