@@ -682,7 +682,8 @@ const IBX = [
   ["NDX","Nasdaq-100 Index","IND","NASDAQ",416843],["SPX","S&P 500 Index","IND","CBOE",416904],["INDU","Dow Jones Industrial Average","IND",""],
   ["RUT","Russell 2000 Index","IND",""],["VIX","CBOE Volatilitätsindex","IND","CBOE"],
   ["NQ","Nasdaq-100 E-mini Future","FUT","CME"],["ES","S&P 500 E-mini Future","FUT","CME"],["YM","Dow E-mini Future","FUT","CBOT"],["RTY","Russell 2000 E-mini Future","FUT","CME"],
-  ["CL","WTI Rohöl Future","FUT","NYMEX",17340715],["GC","Gold Future","FUT","COMEX"],["SI","Silber Future","FUT","COMEX"],["PL","Platin Future","FUT","NYMEX"],["NG","Erdgas Future","FUT","NYMEX"]
+  ["CL","WTI Rohöl Future","FUT","NYMEX",17340715],["GC","Gold Future","FUT","COMEX"],["SI","Silber Future","FUT","COMEX"],["PL","Platin Future","FUT","NYMEX"],["NG","Erdgas Future","FUT","NYMEX"],
+  ["BZ","Brent Rohöl Future","FUT","NYMEX",45631501],["DAX","DAX 40 Index","IND","EUREX",825711],["HSI","Hang Seng Index","IND","HKFE",1328298]
 ].map(([base,name,sec,ex,id])=>({symbol:sec==="FUT"?base+"1!":base, base, name, sec, ex, mic:"", src:"ib", ...(id?(sec==="FUT"?{root:id}:{conid:id}):{})}));
 const ibPreset = sym => IBX.find(x=>x.symbol===sym);
 const ymd = d => d.toISOString().slice(0,10).replace(/-/g,"");
@@ -910,13 +911,16 @@ function dialog(title, bodyHtml, okText, onOk){
 const esc = t => String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* TradingView list text: "###Abschnitt,NASDAQ:AAPL,TVC:NDX,…" (export file) or one symbol per line */
-const TV_IDX = {NDX:"NDX",NAS100:"NDX",US100:"NDX",USTEC:"NDX",NQ100:"NDX",IXIC:"NDX",SPX:"SPX",SPX500:"SPX",US500:"SPX",SPXUSD:"SPX",DJI:"INDU",US30:"INDU",DJ30:"INDU",WS30:"INDU",RUT:"RUT",US2000:"RUT",RUSSELL2000:"RUT",VIX:"VIX"};
-const TV_FUT = {USOIL:"CL",WTI:"CL",XTIUSD:"CL",WTICOUSD:"CL",USOUSD:"CL",CL:"CL",NATGAS:"NG",XNGUSD:"NG",NGAS:"NG"};
+const TV_IDX = {NDX:"NDX",NAS100:"NDX",US100:"NDX",USTEC:"NDX",NQ100:"NDX",IXIC:"NDX",SPX:"SPX",SPX500:"SPX",US500:"SPX",SPXUSD:"SPX",DJI:"INDU",US30:"INDU",DJ30:"INDU",WS30:"INDU",RUT:"RUT",US2000:"RUT",RUSSELL2000:"RUT",RUSSELL:"RUT",VIX:"VIX","VX1!":"VIX",US2000USD:"RUT",DAX:"DAX",DEU40:"DAX",GER40:"DAX",DE40:"DAX",GER30:"DAX","FDAX1!":"DAX",HSI:"HSI",HK50:"HSI",HK33:"HSI"};
+const TV_FUT = {USOIL:"CL",WTI:"CL",XTIUSD:"CL",WTICOUSD:"CL",USOUSD:"CL",CL:"CL",NATGAS:"NG",XNGUSD:"NG",NGAS:"NG",UKOIL:"BZ",BRENT:"BZ",XBRUSD:"BZ",UKOUSD:"BZ",BRENTCMDUSD:"BZ"};
 function tvMap(tok){
   const t=tok.trim(); if(!t) return null; const [ex,raw]=t.includes(":")?t.split(":"):["",t]; const S=raw.toUpperCase().replace(/\s+/g,"");
-  if(TV_IDX[S]) return symOf(ibPreset(TV_IDX[S]));
+  if(/DOWNLOADED|BARCHART/i.test(t)||/^CRYPTOCAP$/i.test(ex)) return null;
+  const usx=/^(NASDAQ|NYSE|AMEX|ARCA|BATS|OTC)$/i.test(ex); // dort ist z. B. WTI oder DAX eine Aktie/ein ETF
+  if(TV_IDX[S]&&!(usx&&!/^(NDX|IXIC)$/.test(S))) return symOf(ibPreset(TV_IDX[S]));
   let m=/^([A-Z]{1,3})\d!$/.exec(S); if(m&&ibPreset(m[1]+"1!")) return symOf(ibPreset(m[1]+"1!"));
-  if(TV_FUT[S]) return symOf(ibPreset(TV_FUT[S]+"1!"));
+  if(TV_FUT[S]&&!usx) return symOf(ibPreset(TV_FUT[S]+"1!"));
+  if(/\d!$/.test(S)) return null;
   const MET={GOLD:"XAU",SILVER:"XAG",PLATINUM:"XPT",PALLADIUM:"XPD"}; if(MET[S]) return {symbol:MET[S]+"/USD",mic:"",name:t};
   m=/^(XAU|XAG|XPT|XPD)(USD)$/.exec(S); if(m) return {symbol:m[1]+"/USD",mic:"",name:t};
   m=/^([A-Z]{2,5})(USDT|USDC|USD|EUR)$/.exec(S); if(m&&CRYPTO.has(m[1])) return {symbol:m[1]+"/"+(m[2]==="EUR"?"EUR":"USD"),mic:"",name:t};
