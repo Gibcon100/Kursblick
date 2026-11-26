@@ -37,7 +37,7 @@ button{cursor:pointer}
 .results .sym{font-family:var(--f-num);font-weight:500}
 .results .ex{color:var(--muted);font-size:12px}
 .seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
-.seg button{background:none;border:0;padding:5px 9px;font-family:var(--f-num);font-size:12.5px;color:var(--muted)}
+.seg button{background:none;border:0;padding:5px 7px;font-family:var(--f-num);font-size:12.5px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--chip);color:var(--fg)}
 .tbtn{background:none;border:1px solid var(--line);border-radius:4px;padding:5px 9px;font-size:12.5px;color:var(--muted)}
 .tbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
@@ -54,6 +54,7 @@ button{cursor:pointer}
 .params input[type=checkbox]{width:auto}
 .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 6px 2px;border-top:1px solid var(--line);margin-top:4px}
 .sw{width:10px;height:10px;border-radius:2px;flex:none}
+.tpl{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:5px 6px;font-size:12.5px;color:var(--fg);max-width:150px}
 .mode{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .dot.live{background:var(--up)} .dot.demo{background:#d99a1e}
@@ -156,6 +157,7 @@ a{color:var(--accent)}
       <button data-i="15min">15m</button><button data-i="30min">30m</button><button data-i="1h">1h</button><button data-i="4h">4h</button>
       <button data-i="1day" aria-pressed="true">1T</button><button data-i="1week">1W</button><button data-i="1month">1M</button>
     </div>
+    <select class="tpl" id="tpl" aria-label="Layout-Vorlage" title="Layout-Vorlage: Indikatoren, Einstellungen und Zeitrahmen"></select>
     <div class="ind">
       <button class="tbtn" id="indBtn" aria-expanded="false">Indikatoren</button>
       <div class="ind-menu" id="indMenu" hidden></div>
@@ -967,11 +969,12 @@ function toastInfo(text){ const t=document.createElement("div"); t.className="to
 
 /* ---------- Timeframe + indicator menu ---------- */
 $("tf").querySelectorAll("button").forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.i===interval));
-  b.onclick=()=>{ interval=b.dataset.i; store.set("interval",interval); $("tf").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); load(); }; });
+  b.onclick=()=>{ interval=b.dataset.i; store.set("interval",interval); $("tf").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); tplTouched(); load(); }; });
+function tplTouched(){ if(typeof renderTpl!=="function"||!tplCur) return; tplCur=""; store.set("tplCur",""); renderTpl(); }
 IND.forEach((d,ix)=>{ if(d.own&&!IND[ix-1].own){ const g=document.createElement("div"); g.className="grp"; g.textContent="Meine Indikatoren"; $("indMenu").appendChild(g); }
   const l=document.createElement("label"); l.innerHTML=`<input type="checkbox" id="ind-${d.id}"><span class="sw" style="background:${d.color}"></span><span></span>`;
   l.lastChild.textContent=d.name; const cb=l.querySelector("input"); cb.checked=active.has(d.id);
-  cb.onchange=()=>{ cb.checked?active.add(d.id):active.delete(d.id); store.set("ind",[...active]); if(bars.length) renderIndicators(); ensureHtf(); }; $("indMenu").appendChild(l);
+  cb.onchange=()=>{ cb.checked?active.add(d.id):active.delete(d.id); store.set("ind",[...active]); tplTouched(); if(bars.length) renderIndicators(); ensureHtf(); }; $("indMenu").appendChild(l);
   if(PDEF[d.id]){ const box=document.createElement("div"); box.className="params"; const q=P(d.id);
     PDEF[d.id].forEach(f=>{ const w=document.createElement("label"); const id=`par-${d.id}-${f.k}`; let inp;
       if(f.type==="select"){ inp=document.createElement("select"); f.opts.forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; inp.appendChild(o); }); inp.value=q[f.k]; }
@@ -981,10 +984,44 @@ IND.forEach((d,ix)=>{ if(d.own&&!IND[ix-1].own){ const g=document.createElement(
       if(f.type==="bool") w.append(inp,t); else w.append(t,inp);
       inp.onchange=()=>{ const v = f.type==="bool"?inp.checked : f.type==="select"?inp.value : parseFloat(inp.value);
         if(f.type!=="bool"&&f.type!=="select"&&!(v>0)) { inp.value=P(d.id)[f.k]; return; }
-        params[d.id]={...(params[d.id]||{}),[f.k]:f.k==="mult"||f.k.endsWith("Mult")||f.type==="select"?v:Math.round(v)}; store.set("params",params);
+        tplTouched(); params[d.id]={...(params[d.id]||{}),[f.k]:f.k==="mult"||f.k.endsWith("Mult")||f.type==="select"?v:Math.round(v)}; store.set("params",params);
         if(bars.length) renderIndicators(); ensureHtf(); };
       box.appendChild(w); });
     box.addEventListener("click",e=>e.stopPropagation()); $("indMenu").appendChild(box); } });
+/* ---------- Layout templates (indicators + settings + timeframe), like TradingView's indicator templates ---------- */
+const TPL_STD = {id:"std", name:"Mein Standard (30m)", ind:["bb","cmma","sqz","cmmacd"], params:{}, interval:"30min", fixed:true};
+let tpls = store.get("tpls", [TPL_STD]); if(!tpls.some(t=>t.id==="std")) tpls.unshift(TPL_STD);
+let tplCur = store.get("tplCur", "");
+function syncMenu(){
+  IND.forEach(d=>{ const cb=$("ind-"+d.id); if(cb) cb.checked=active.has(d.id);
+    if(PDEF[d.id]){ const q=P(d.id); PDEF[d.id].forEach(f=>{ const el=$(`par-${d.id}-${f.k}`); if(!el) return; if(f.type==="bool") el.checked=!!q[f.k]; else el.value=q[f.k]; }); } });
+  $("tf").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.i===interval)));
+}
+function renderTpl(){
+  const sel=$("tpl"); sel.innerHTML="";
+  const add=(v,t,dis)=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; if(dis) o.disabled=true; sel.appendChild(o); };
+  add("","Vorlage …",true); tpls.forEach(t=>add(t.id,t.name)); add("_save","＋ Aktuelles Layout speichern…");
+  if(tplCur&&!tpls.find(t=>t.id===tplCur)?.fixed) add("_del","× Vorlage löschen…");
+  sel.value=tpls.some(t=>t.id===tplCur)?tplCur:"";
+}
+function applyTpl(t){
+  active=new Set(t.ind); params=JSON.parse(JSON.stringify(t.params||{})); interval=t.interval||interval;
+  store.set("ind",[...active]); store.set("params",params); store.set("interval",interval);
+  tplCur=t.id; store.set("tplCur",tplCur); syncMenu(); renderTpl(); load();
+}
+$("tpl").onchange=()=>{ const v=$("tpl").value;
+  if(v==="_save"){ renderTpl(); const cur0=tpls.find(t=>t.id===tplCur&&!t.fixed);
+    dialog("Layout als Vorlage speichern",`<p>Speichert die eingeschalteten Indikatoren, ihre Einstellungen und den Zeitrahmen (${interval}).</p><input type="text" id="dNm" maxlength="40" placeholder="z. B. Swing 4h" value="${cur0?esc(cur0.name):""}">`,"Speichern",b=>{
+      const n=b.querySelector("#dNm").value.trim(); if(!n) return; let t=tpls.find(x=>x.name===n&&!x.fixed);
+      if(!t){ t={id:"t"+Date.now().toString(36),name:n}; tpls.push(t); }
+      Object.assign(t,{ind:[...active],params:JSON.parse(JSON.stringify(params)),interval}); store.set("tpls",tpls); tplCur=t.id; store.set("tplCur",tplCur); renderTpl(); });
+    return; }
+  if(v==="_del"){ const t=tpls.find(x=>x.id===tplCur); renderTpl(); if(!t) return;
+    dialog("Vorlage löschen",`<p>„${esc(t.name)}“ löschen? Die Charts bleiben wie sie sind.</p>`,"Löschen",()=>{ tpls=tpls.filter(x=>x!==t); store.set("tpls",tpls); tplCur=""; store.set("tplCur",""); renderTpl(); }); return; }
+  const t=tpls.find(x=>x.id===v); if(t) applyTpl(t);
+};
+renderTpl();
+
 $("indBtn").onclick=e=>{ e.stopPropagation(); const m=$("indMenu"); m.hidden=!m.hidden; $("indBtn").setAttribute("aria-expanded",String(!m.hidden)); };
 
 /* ---------- Theme follow ---------- */

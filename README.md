@@ -3,6 +3,7 @@
 Persönliches Charting-Terminal als Ersatz für TradingView.
 
 - Kerzencharts von 15 Minuten bis Monat, Tickersuche
+- Layout-Vorlagen: Indikatoren, Einstellungen und Zeitrahmen unter einem Namen speichern und mit einem Klick wechseln ("Mein Standard (30m)" ist vorinstalliert)
 - Mehrere Watchlists mit Abschnitten, Kurs und Tagesänderung; Import aus TradingView (.txt-Export) und aus IBKR-Watchlists, Export zurück ins TradingView-Format
 - Echte Indizes (NDX, SPX, Dow, RUT, VIX) und fortlaufende Futures (NQ1!, ES1!, CL1!, GC1!, SI1! …) über Interactive Brokers, mit automatischem Kontraktwechsel
 - Klassische Indikatoren: SMA, EMA, VWAP, Volumen, RSI, MACD, Stochastik, SuperTrend, Ichimoku, Keltner, Donchian, ATR, ADX/DMI, OBV
