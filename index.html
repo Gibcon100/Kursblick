@@ -118,6 +118,16 @@ dialog.dlg::backdrop{background:rgba(0,0,0,.45)}
 .pane{height:150px;border-top:1px solid var(--line);position:relative}
 .pane .lbl,.legend{position:absolute;left:8px;top:4px;z-index:3;font-family:var(--f-num);font-size:11.5px;color:var(--muted);pointer-events:none}
 .legend{display:flex;flex-wrap:wrap;gap:2px 12px;max-width:calc(100% - 80px)}
+.stage{flex:1;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);min-height:0}
+.stage.n2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .stage.n4{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.lay{margin-left:auto;align-self:center}
+.minis{display:grid;grid-auto-rows:minmax(0,1fr);min-height:0;border-left:1px solid var(--line)}
+.mini{display:flex;flex-direction:column;min-height:0;border-bottom:1px solid var(--line)} .mini:last-child{border-bottom:0}
+.mh{display:flex;align-items:center;gap:5px;padding:5px 8px;font-size:12px;white-space:nowrap}
+.mh select{background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:3px 2px;font-family:var(--f-num);font-size:12px;max-width:84px}
+.mh .mp{font-family:var(--f-num);font-variant-numeric:tabular-nums;margin-left:auto;font-size:11.5px;overflow:hidden;text-overflow:ellipsis}
+.mh .tbtn{padding:2px 7px;font-size:11.5px}
+.mc{flex:1;min-height:0;position:relative}
 .msg{position:absolute;inset:0;display:grid;place-items:center;z-index:4;background:color-mix(in srgb,var(--panel) 82%,transparent);text-align:center;padding:20px}
 .msg p{max-width:46ch;margin:0;line-height:1.5}
 
@@ -142,6 +152,9 @@ a{color:var(--accent)}
   .main{order:1;height:78vh;min-height:480px}
   .info{order:2}
   .mode{margin-left:0}
+  .stage.n2,.stage.n4{grid-template-columns:minmax(0,1fr);grid-template-rows:none;overflow:auto}
+  .stage.n2 .charts,.stage.n4 .charts{min-height:420px}
+  .minis{border-left:0;border-top:1px solid var(--line);grid-auto-rows:260px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -200,8 +213,10 @@ a{color:var(--accent)}
       <span class="n" id="hName"></span>
       <span class="px" id="hPx"></span>
       <span class="chg" id="hChg"></span>
+      <div class="seg lay" id="lay" role="group" aria-label="Anzahl der Charts"><button data-n="1" aria-pressed="true" title="Ein Chart">1</button><button data-n="2" aria-pressed="false" title="Zwei Charts nebeneinander">2</button><button data-n="4" aria-pressed="false" title="Vier Charts: Hauptchart plus drei kleine">4</button></div>
       <div class="ohlc" id="hOhlc"></div>
     </div>
+    <div class="stage" id="stage">
     <div class="charts">
       <div id="c-main" style="position:relative"><div class="legend" id="legend"></div></div>
       <div class="pane" id="p-rsi" hidden><div class="lbl" id="l-rsi">RSI 14</div></div>
@@ -214,6 +229,8 @@ a{color:var(--accent)}
       <div class="pane" id="p-obv" hidden><div class="lbl" id="l-obv">OBV</div></div>
       <div class="msg" id="msg" hidden><p id="msgTxt"></p></div>
       <input class="txtin" id="txtin" type="text" placeholder="Text eingeben, Enter" hidden aria-label="Text für den Chart">
+    </div>
+    <div class="minis" id="minis" hidden></div>
     </div>
   </main>
 
@@ -847,7 +864,7 @@ const priceCache = {};
 function renderWatch(){
   const sel=$("wlSel"); sel.innerHTML="";
   lists.forEach(l=>{ const o=document.createElement("option"); o.value=l.id; o.textContent=`${l.name} (${l.items.filter(x=>!x.section).length})`; sel.appendChild(o); });
-  sel.value=L().id;
+  sel.value=L().id; if(typeof minis!=="undefined") minis.forEach(miniFill);
   const ul=$("wl"); ul.innerHTML=""; const list=L(), closed=new Set(list.closed||[]); let hide=false;
   list.items.forEach((w,i)=>{ const li=document.createElement("li");
     const rm=document.createElement("button"); rm.className="rm"; rm.textContent="×";
@@ -1029,9 +1046,56 @@ renderTpl();
 $("indBtn").onclick=e=>{ e.stopPropagation(); const m=$("indMenu"); m.hidden=!m.hidden; $("indBtn").setAttribute("aria-expanded",String(!m.hidden)); };
 
 /* ---------- Theme follow ---------- */
-const reTheme=()=>{ all().forEach(c=>c.applyOptions(theme())); candles.applyOptions({upColor:css("--up"),downColor:css("--down"),wickUpColor:css("--up"),wickDownColor:css("--down")}); if(bars.length){ renderIndicators(); renderDrawings(); } };
+const reTheme=()=>{ all().forEach(c=>c.applyOptions(theme())); minis.forEach(m=>m.chart.applyOptions({...theme(),layout:{...theme().layout,attributionLogo:false}})); candles.applyOptions({upColor:css("--up"),downColor:css("--down"),wickUpColor:css("--up"),wickDownColor:css("--down")}); if(bars.length){ renderIndicators(); renderDrawings(); } };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",reTheme);
 new MutationObserver(reTheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+/* ---------- Multi charts: main chart plus 1 or 3 compact charts with their own symbol and timeframe ---------- */
+const MIV=[["15min","15m"],["30min","30m"],["1h","1h"],["4h","4h"],["1day","1T"],["1week","1W"]];
+const multi = store.get("multi",{n:1,cells:[]});
+const minis = [];
+const miniDefault = i => { const it=lists.flatMap(l=>l.items).filter(x=>!x.section&&!sameSym(x,cur)); const u=[...new Map(it.map(x=>[kOf(x),x])).values()];
+  const f=[{symbol:"SPY",mic:"",name:"SPY"},{symbol:"IWM",mic:"",name:"IWM"},{symbol:"TLT",mic:"",name:"TLT"}];
+  return {s:symOf(u[i]||f[i]), iv:"1day"}; };
+function miniFill(m){ const sel=m.el.querySelector(".ms"); const items=[...new Map([...L().items.filter(x=>!x.section),m.s].map(x=>[kOf(x),x])).values()];
+  m.map=Object.fromEntries(items.map(x=>[kOf(x),x])); sel.innerHTML="";
+  items.forEach(x=>{ const o=document.createElement("option"); o.value=kOf(x); o.textContent=x.symbol; sel.appendChild(o); }); sel.value=kOf(m.s); }
+function miniSave(){ minis.forEach((m,i)=>{ multi.cells[i]={s:symOf(m.s),iv:m.iv}; }); store.set("multi",multi); }
+function miniMsg(m,t){ const e=m.el.querySelector(".msg"); e.hidden=!t; e.querySelector("p").textContent=t||""; }
+function miniData(m,b){ m.bars=b; m.candles.setData(b);
+  m.vol.setData(b.map(x=>({time:x.time,value:x.volume,color:(x.close>=x.open?css("--up"):css("--down"))+"55"})));
+  const l=b[b.length-1], q=b[b.length-2]; m.el.querySelector(".mp").textContent=l?fmt(l.close)+(q?"  "+(l.close>=q.close?"+":"")+fmt((l.close/q.close-1)*100)+" %":""):"";
+  m.el.querySelector(".mp").style.color=l&&q?(l.close>=q.close?css("--up"):css("--down")):"";
+  if(!m.ranged){ m.ranged=true; const rng={from:Math.max(0,b.length-110),to:b.length+3}; requestAnimationFrame(()=>requestAnimationFrame(()=>m.chart.timeScale().setVisibleLogicalRange(rng))); } }
+async function loadMini(m,stale){
+  const want=kOf(m.s)+"|"+m.iv; m.want=want; miniMsg(m,"");
+  if(!live){ miniData(m,demoBars()); return; }
+  try{ const b=await fetchBars(m.s,m.iv,400,stale||(m.iv.includes("min")||m.iv.includes("h")?60000:600000));
+    if(m.want!==want||!minis.includes(m)) return; if(!b.length) throw {code:"tool_error",server:m.s.src==="ib"?IB:TD,message:"Keine Kursdaten erhalten."}; miniData(m,b);
+  }catch(e){ if(m.want===want&&minis.includes(m)) miniMsg(m,errText(e)); } }
+async function loadMinis(stale){ for(const m of [...minis]) await loadMini(m,stale); }
+function buildMinis(){
+  minis.forEach(m=>m.chart.remove()); minis.length=0; const box=$("minis"); box.innerHTML="";
+  $("stage").className="stage n"+multi.n; box.hidden=multi.n===1;
+  document.querySelectorAll("#lay button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.n===multi.n)));
+  for(let i=0;i<multi.n-1;i++){
+    const c=multi.cells[i]||(multi.cells[i]=miniDefault(i)), el=document.createElement("div"); el.className="mini";
+    el.innerHTML=`<div class="mh"><select class="ms" aria-label="Wertpapier für Chart ${i+2}"></select><select class="mi" aria-label="Zeitrahmen für Chart ${i+2}"></select><span class="mp"></span><button class="tbtn mg" title="Diesen Wert in den Hauptchart laden" aria-label="In den Hauptchart laden">↖</button></div><div class="mc" style="position:relative"><div class="msg" hidden><p></p></div></div>`;
+    box.appendChild(el); const mc=el.querySelector(".mc");
+    const chart=mk(mc); chart.applyOptions({layout:{attributionLogo:false}});
+    const candles=chart.addCandlestickSeries({upColor:css("--up"),downColor:css("--down"),borderVisible:false,wickUpColor:css("--up"),wickDownColor:css("--down")});
+    const vol=chart.addHistogramSeries({priceScaleId:"vol",priceFormat:{type:"volume"},lastValueVisible:false,priceLineVisible:false});
+    chart.priceScale("vol").applyOptions({scaleMargins:{top:.82,bottom:0}}); candles.priceScale().applyOptions({scaleMargins:{top:.08,bottom:.22}});
+    const m={el,chart,candles,vol,s:c.s,iv:c.iv}; minis.push(m); miniFill(m);
+    const si=el.querySelector(".mi"); MIV.forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; si.appendChild(o); }); si.value=m.iv;
+    el.querySelector(".ms").onchange=e=>{ m.s=m.map[e.target.value]; m.ranged=false; miniSave(); loadMini(m); };
+    si.onchange=e=>{ m.iv=e.target.value; m.ranged=false; miniSave(); loadMini(m); };
+    el.querySelector(".mg").onclick=()=>select(symOf(m.s));
+  }
+  miniSave();
+}
+document.querySelectorAll("#lay button").forEach(b=>b.onclick=()=>{ multi.n=+b.dataset.n; buildMinis(); loadMinis(); });
+if(![1,2,4].includes(multi.n)) multi.n=1;
 
 /* ---------- Auto refresh: chart each minute, plus up to 3 other symbols with open alerts ---------- */
 let rr=0;
@@ -1042,6 +1106,7 @@ async function refresh(){
     if(sameSym(sym,cur)&&iv===interval&&b.length){ bars=b; paint(true); } }catch(e){}
   loadQuote();
   await updatePrices();
+  await loadMinis(45000);
   const others=[...new Map(alerts.filter(a=>!a.hit&&!sameSym(a,cur)).map(a=>[kOf(a),a])).values()];
   for(let k=0;k<Math.min(3,others.length);k++){ const a=others[(rr+k)%others.length];
     const pc=priceCache[kOf(a)]; if(pc&&pc.t&&Date.now()-pc.t<90000){ checkAlerts(a,pc.px,pc.px); continue; }
@@ -1051,11 +1116,11 @@ async function refresh(){
 
 /* ---------- Boot ---------- */
 function setMode(m){ $("dot").className="dot "+(m==="live"?"live":"demo"); $("modeTxt").textContent=m==="live"?"Live: Twelve Data · IBKR":"Beispieldaten"; }
-renderWatch(); renderAlerts(); bars=demoBars(); paint(); $("hName").textContent="Beispieldaten, bis die Datenverbindung steht";
+renderWatch(); renderAlerts(); buildMinis(); bars=demoBars(); paint(); $("hName").textContent="Beispieldaten, bis die Datenverbindung steht";
 (async()=>{
   try{ mcp = window.claude && window.claude.use ? await window.claude.use("mcp") : null; }catch(e){ mcp=null; }
-  if(!mcp){ setMode("demo"); load(); return; }
-  live=true; setMode("live"); load();
+  if(!mcp){ setMode("demo"); load(); loadMinis(); return; }
+  live=true; setMode("live"); load(); loadMinis();
   if(!store.get("ibIdxV1",false)){ const l=lists[0]; if(!l.items.some(x=>x.src==="ib")){ l.items.unshift({section:"Indizes & Futures (IBKR)"}, ...["NDX","SPX","INDU","RUT","VIX","NQ1!","ES1!","CL1!","GC1!","SI1!"].map(k=>symOf(ibPreset(k))), {section:"Meine Werte"}); }
     store.set("ibIdxV1",true); saveLists(); renderWatch(); }
   updatePrices();
