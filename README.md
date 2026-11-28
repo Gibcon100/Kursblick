@@ -27,3 +27,4 @@ Twelve Data kennt keine echten Indizes (dafür ETFs wie QQQ, SPY, IWM, VIXY); WT
 
 Eine einzelne Datei: `index.html`. Charts mit [TradingView Lightweight Charts](https://github.com/tradingview/lightweight-charts) 4.2.0 (Apache-2.0); das TradingView-Logo im Chart ist die von der Lizenz verlangte Namensnennung.
 - Mehrfach-Charts: oben rechts im Chart-Kopf 1, 2 oder 4 Charts wählen. Neben dem Hauptchart (mit allen Indikatoren) erscheinen 1 bzw. 3 kompakte Charts, jeweils mit eigenem Wert (aus der aktuellen Watchlist) und eigenem Zeitrahmen. Der Pfeil lädt den Wert in den Hauptchart. Die Auswahl bleibt im Browser gespeichert.
+- Messen: Werkzeug „Messen“ in der Zeichenleiste. Start- und Endpunkt anklicken, es erscheinen Kursänderung, Prozent, Anzahl Kerzen und Dauer.
