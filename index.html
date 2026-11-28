@@ -37,7 +37,7 @@ button{cursor:pointer}
 .results .sym{font-family:var(--f-num);font-weight:500}
 .results .ex{color:var(--muted);font-size:12px}
 .seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
-.seg button{background:none;border:0;padding:5px 7px;font-family:var(--f-num);font-size:12.5px;color:var(--muted)}
+.seg button{background:none;border:0;padding:5px 5px;font-family:var(--f-num);font-size:12.5px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--chip);color:var(--fg)}
 .tbtn{background:none;border:1px solid var(--line);border-radius:4px;padding:5px 9px;font-size:12.5px;color:var(--muted)}
 .tbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
@@ -181,6 +181,7 @@ a{color:var(--accent)}
       <button id="dT" title="Trendlinie: zwei Punkte anklicken">Trend</button>
       <button id="dF" title="Fibonacci: Start- und Endpunkt anklicken">Fib</button>
       <button id="dR" title="Rechteck: zwei Ecken anklicken">Box</button>
+      <button id="dM" title="Messen: Start- und Endpunkt anklicken, zeigt Kursänderung, Prozent, Kerzen und Dauer">Messen</button>
       <button id="dX" title="Text: Stelle anklicken, Text eingeben, Enter">Text</button>
       <button id="dA" title="Preisalarm: Preis im Chart anklicken">Alarm</button>
     </div>
@@ -572,6 +573,15 @@ const drawPrim = {
           ctx.strokeStyle = lv===.618||lv===.5 ? "#e0a020" : acc; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x1,yy); ctx.lineTo(right,yy); ctx.stroke();
           if(k<FIB.length-1){ const y2=y(d.p2+(d.p1-d.p2)*FIB[k+1]); if(y2!=null){ ctx.fillStyle=acc+(k%2?"14":"0c"); ctx.fillRect(x1,Math.min(yy,y2),right-x1,Math.abs(y2-yy)); } }
           ctx.fillStyle=fg; ctx.fillText(`${lv} (${fmt(pr)})`, x1+4, yy-3); }); }
+      if(d.kind==="m"){ const x1=x(d.t1), x2=x(d.t2), y1=y(d.p1), y2=y(d.p2); if([x1,x2,y1,y2].some(v=>v==null)) continue;
+        const dp=d.p2-d.p1, up=dp>=0, col=up?css("--up"):css("--down"), lo=Math.min(d.t1,d.t2), hi=Math.max(d.t1,d.t2);
+        const n=Math.max(0,bars.filter(b=>b.time>=lo&&b.time<=hi).length-1), sec=hi-lo, dur=sec>=86400?Math.floor(sec/86400)+" T"+(sec%86400>=3600?" "+Math.floor(sec%86400/3600)+" Std":""):sec>=3600?Math.floor(sec/3600)+" Std"+(sec%3600>=60?" "+Math.floor(sec%3600/60)+" Min":""):Math.round(sec/60)+" Min";
+        ctx.fillStyle=col+"20"; ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+        ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1)); ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1)); ctx.setLineDash([]);
+        ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        const txt=`${dp>=0?"+":""}${fmt(dp)} (${dp>=0?"+":""}${fmt(d.p1?dp/d.p1*100:0)} %) · ${n} Kerzen · ${dur}`, w=ctx.measureText(txt).width+12;
+        const bx=Math.min(Math.max(4,(x1+x2)/2-w/2),mediaSize.width-w-4), by=up?Math.min(y1,y2)-24:Math.max(y1,y2)+6;
+        ctx.fillStyle=col; ctx.fillRect(bx,by,w,18); ctx.fillStyle="#fff"; ctx.fillText(txt,bx+6,by+13); }
       if(d.kind==="x"){ const xx=x(d.t), yy=y(d.p); if(xx==null||yy==null) continue; ctx.font="13px IBM Plex Sans, sans-serif"; ctx.fillStyle=fg; ctx.fillText(d.text, xx, yy); ctx.font="11px IBM Plex Mono, monospace"; }
     }
     if(pendingPreview){ const xx=x(pendingPreview.t), yy=y(pendingPreview.p); if(xx!=null&&yy!=null){ ctx.fillStyle=acc; ctx.beginPath(); ctx.arc(xx,yy,4,0,Math.PI*2); ctx.fill(); } }
@@ -588,9 +598,9 @@ function renderDrawings(){
   }
   for(const a of alerts.filter(a=>sameSym(a,cur)&&!a.hit))
     drawn.push({kind:"a", obj:candles.createPriceLine({price:a.price,color:"#e0a020",lineWidth:1,lineStyle:2,axisLabelVisible:true,title:"Alarm"})});
-  drawPrim.set(list.filter(d=>d.kind==="r"||d.kind==="f"||d.kind==="x"));
+  drawPrim.set(list.filter(d=>d.kind==="r"||d.kind==="f"||d.kind==="x"||d.kind==="m"));
 }
-const TOOLS=[["dCursor","cursor"],["dH","h"],["dT","t"],["dF","f"],["dR","r"],["dX","x"],["dA","a"]];
+const TOOLS=[["dCursor","cursor"],["dH","h"],["dT","t"],["dF","f"],["dR","r"],["dM","m"],["dX","x"],["dA","a"]];
 function setTool(t){ tool=t; pending=null; pendingPreview=null; drawPrim.set(drawPrim.items); TOOLS.forEach(([id,k])=>$(id).setAttribute("aria-pressed",String(k===t))); }
 TOOLS.forEach(([id,k])=>$(id).onclick=()=>setTool(k));
 $("dClear").onclick=()=>{ store.set(dKey(),[]); renderDrawings(); };
